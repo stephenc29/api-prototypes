@@ -1,0 +1,17 @@
+@HelloWorldApi_HostAddress = http://localhost:5139
+
+### V1 weatherforecast
+GET {{HelloWorldApi_HostAddress}}/api/v1/weatherforecast/
+Accept: application/json
+
+### V2 weatherforecast
+GET {{HelloWorldApi_HostAddress}}/api/v2/weatherforecast/
+Accept: application/json
+
+### V1 helloworld
+GET {{HelloWorldApi_HostAddress}}/api/v1/helloworld/
+Accept: text/plain
+
+### V1.1 helloworld
+GET {{HelloWorldApi_HostAddress}}/api/v1.1/helloworld/
+Accept: text/plain

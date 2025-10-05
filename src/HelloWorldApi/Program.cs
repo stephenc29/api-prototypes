@@ -1,6 +1,5 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using HelloWorldApi.Swagger;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -23,7 +22,25 @@ builder.Services.AddOpenTelemetry()
     {
         tracerProviderBuilder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("HelloWorldApi"))
-            .AddAspNetCoreInstrumentation()
+            .AddAspNetCoreInstrumentation(options => {
+                options.EnrichWithHttpResponse = (activity, response) =>
+                {
+                    var routePattern = response.HttpContext.GetEndpoint()?.Metadata
+                        .GetMetadata<ControllerActionDescriptor>()?.AttributeRouteInfo?.Template ?? response.HttpContext.Request.Path;
+
+                    if (!routePattern.Contains("{version:apiVersion}"))
+                    {
+                        return;
+                    }
+
+                    var apiVersion = response.HttpContext.GetRequestedApiVersion()?.ToString() ?? "unknown";
+
+                    var resolvedRoute = routePattern.Replace("{version:apiVersion}", apiVersion);
+
+                    activity.SetTag("http.route", resolvedRoute);
+                    activity.DisplayName = activity.DisplayName.Replace("{version:apiVersion}", apiVersion);
+                };
+            })
             .AddHttpClientInstrumentation()
             .AddConsoleExporter(); // Export to console for now
     });

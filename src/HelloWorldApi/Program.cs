@@ -1,5 +1,5 @@
+using HelloWorldApi.Extensions;
 using HelloWorldApi.Swagger;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -9,6 +9,8 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddApiMetrics();
+
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
     {
@@ -16,29 +18,24 @@ builder.Services.AddOpenTelemetry()
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("HelloWorldApi"))
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddApiMetrics()
             .AddPrometheusExporter(); // Export to /metrics
     })
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("HelloWorldApi"))
-            .AddAspNetCoreInstrumentation(options => {
+            .AddAspNetCoreInstrumentation(options =>
+            {
+                options.EnrichWithHttpRequest = (activity, request) =>
+                {
+                    var apiVersion = request.HttpContext.GetRequestedApiVersion()?.ToString() ?? "unknown";
+                    activity.SetTag("api_version", apiVersion);
+                };
                 options.EnrichWithHttpResponse = (activity, response) =>
                 {
-                    var routePattern = response.HttpContext.GetEndpoint()?.Metadata
-                        .GetMetadata<ControllerActionDescriptor>()?.AttributeRouteInfo?.Template ?? response.HttpContext.Request.Path;
-
-                    if (!routePattern.Contains("{version:apiVersion}"))
-                    {
-                        return;
-                    }
-
                     var apiVersion = response.HttpContext.GetRequestedApiVersion()?.ToString() ?? "unknown";
-
-                    var resolvedRoute = routePattern.Replace("{version:apiVersion}", apiVersion);
-
-                    activity.SetTag("http.route", resolvedRoute);
-                    activity.DisplayName = activity.DisplayName.Replace("{version:apiVersion}", apiVersion);
+                    activity.SetTag("api_version", apiVersion);
                 };
             })
             .AddHttpClientInstrumentation()
@@ -77,6 +74,8 @@ if (app.Environment.IsDevelopment())
 
 // Configure the HTTP request pipeline.
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
+
+app.UseRequestMetrics();
 
 app.UseHttpsRedirection();
 

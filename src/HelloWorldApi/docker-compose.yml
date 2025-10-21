@@ -25,6 +25,9 @@
     grafana:
         image: grafana/grafana:latest
         container_name: grafana
+        volumes:
+            - grafana-data:/var/lib/grafana
+            - ./grafana/provisioning:/etc/grafana/provisioning
         ports:
             - "3000:3000"
         networks:
@@ -35,3 +38,6 @@
 networks:
     monitoring:
         driver: bridge
+
+volumes:
+    grafana-data:

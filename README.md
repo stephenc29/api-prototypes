@@ -46,7 +46,7 @@ graph LR
     
     subgraph "Docker Network: monitoring"
         API --> OTel[OpenTelemetry<br/>Instrumentation]
-        OTel --> Metrics[/metrics endpoint]
+        OTel --> Metrics[metrics endpoint]
         
         Prom[Prometheus<br/>:9090] -->|"Scrapes every 5s"| Metrics
         

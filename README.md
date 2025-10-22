@@ -38,6 +38,31 @@ src/ObservableVersionedApi/
 └── Program.cs               # Application startup and configuration
 ```
 
+### Architecture Diagram
+
+```mermaid
+graph LR
+    User[User] -->|"API Requests<br/>(v1.0, v1.1, v2.0)"| API[ObservableVersionedApi<br/>:8080]
+    
+    subgraph "Docker Network: monitoring"
+        API --> OTel[OpenTelemetry<br/>Instrumentation]
+        OTel --> Metrics[/metrics endpoint]
+        
+        Prom[Prometheus<br/>:9090] -->|"Scrapes every 5s"| Metrics
+        
+        Dashboard[Grafana Dashboard<br/>:3000] -->|"PromQL queries"| Prom
+    end
+    
+    ProductOwner[Product Owner] -->|"Monitor API usage"| Dashboard
+    
+    %% Styling
+    classDef container fill:#e1f5fe
+    classDef user fill:#e8f5e8
+    
+    class API,Prom,Dashboard container
+    class User,ProductOwner user
+```
+
 ## Getting Started
 
 ### Prerequisites

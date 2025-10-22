@@ -23,7 +23,7 @@ While OpenTelemetry's built-in ASP.NET Core instrumentation provides excellent H
 ### Key Components
 
 ```
-src/HelloWorldApi/
+src/ObservableVersionedApi/
 ├── Controllers/v1/          # Versioned API controllers
 ├── Controllers/v2/
 ├── Metrics/
@@ -48,7 +48,7 @@ src/HelloWorldApi/
 
 ```bash
 # Clone and navigate to the project
-cd src/HelloWorldApi
+cd src/ObservableVersionedApi
 
 # Start the complete stack
 docker-compose up -d
